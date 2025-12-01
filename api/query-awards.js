@@ -15,7 +15,7 @@ module.exports = async (req, res) => {
       fy,
       fy_start,
       fy_end,
-      scope = "addressable",
+      scope = "full",  // kept for compatibility; we don't branch on it
       limit = 50
     } = body;
 
@@ -25,6 +25,7 @@ module.exports = async (req, res) => {
     }
 
     // Compute fiscal-year date windows (US FY: Oct 1 – Sep 30)
+    // If fy is provided, use that for both start and end.
     const startFy = fy_start || fy || new Date().getFullYear();
     const endFy = fy_end || fy || startFy;
 
@@ -35,7 +36,7 @@ module.exports = async (req, res) => {
       time_period.push({ start_date, end_date });
     }
 
-    // Map short agency codes to full names
+    // Map short agency codes to full names (simple helper; can expand later)
     const agencyMap = {
       USAID: "U.S. Agency for International Development",
       HHS: "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
@@ -57,9 +58,11 @@ module.exports = async (req, res) => {
       });
     }
 
-    // Build filters
+    // Build filters: recipient, time period, agency, award types
     const filters = {
-      recipient_search_text: [vendor],  // USAspending expects an array of strings
+      // IMPORTANT: recipient_search_text must be an array
+      // "vendor" will often be a UEI or exact legal name from your dictionary
+      recipient_search_text: [vendor],
       time_period
     };
 
@@ -67,26 +70,11 @@ module.exports = async (req, res) => {
       filters.agencies = agencies;
     }
 
-    if (scope === "addressable") {
-      filters.award_type_codes = [
-        "A",
-        "B",
-        "C",
-        "D"
-      ];
-      filters.naics_codes = {
-        require: [
-          "541511",
-          "541512",
-          "541513",
-          "541519",
-          "541611",
-          "541618",
-          "541715"
-        ]
-      };
+    // Always restrict to contract awards A, B, C, D as your default
+    filters.award_type_codes = ["A", "B", "C", "D"];
+
+    // No NAICS filter
     // No pricing filter
-    }
 
     const requestBody = {
       fields: [
@@ -122,7 +110,7 @@ module.exports = async (req, res) => {
     res.status(apiRes.status).json({
       ok: apiRes.ok,
       status: apiRes.status,
-      request: requestBody,
+      request: requestBody, // for debugging / GPT to inspect filters
       results: data.results || [],
       raw: data
     });
