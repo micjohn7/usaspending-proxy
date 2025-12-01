@@ -72,11 +72,7 @@ module.exports = async (req, res) => {
         "A",
         "B",
         "C",
-        "D",
-        "IDV_A",
-        "IDV_B",
-        "IDV_C",
-        "IDV_D"
+        "D"
       ];
       filters.naics_codes = {
         require: [
@@ -89,7 +85,7 @@ module.exports = async (req, res) => {
           "541715"
         ]
       };
-      filters.contract_pricing_type_codes = ["J"]; // Firm-Fixed-Price
+    // No pricing filter
     }
 
     const requestBody = {
