@@ -59,7 +59,7 @@ module.exports = async (req, res) => {
 
     // Build filters
     const filters = {
-      recipient_search_text: vendor,
+      recipient_search_text: [vendor],  // USAspending expects an array of strings
       time_period
     };
 
